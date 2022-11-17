@@ -69,7 +69,23 @@ func GetAllBooks(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(books)
 
 }
-func GetBookById(w http.ResponseWriter, r *http.Request) {}
+func GetBookById(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+
+	id, err := strconv.Atoi(params["id"])
+
+	if err != nil {
+		log.Fatalf("Unable to convert the string into int. %v", err)
+	}
+
+	book, err := getBookById(int64(id))
+
+	if err != nil {
+		log.Fatalf("Unable to get the book by id. %v", err)
+	}
+
+	json.NewEncoder(w).Encode(book)
+}
 
 func UpdateBook(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
@@ -98,7 +114,9 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(res)
 }
-func DeleteBook(w http.ResponseWriter, r *http.Request) {}
+func DeleteBook(w http.ResponseWriter, r *http.Request) {
+
+}
 
 func insertBook(book models.Book) int64 {
 	db := createConnection()
@@ -169,4 +187,29 @@ func updateBook(id int64, book models.Book) int64 {
 	fmt.Printf(`Total Affected Rows are : %v`, rowsAffected)
 
 	return rowsAffected
+}
+
+func getBookById(id int64) (models.Book, error) {
+	db := createConnection()
+	defer db.Close()
+
+	var book models.Book
+
+	sqlStatement := "SELECT * FROM books where id=$1"
+
+	row := db.QueryRow(sqlStatement, id)
+
+	err := row.Scan(&book.BookId, &book.Name, &book.Price, &book.Publisher)
+
+	switch err {
+	case sql.ErrNoRows:
+		fmt.Println("No rows returned")
+		return book, nil
+	case nil:
+		return book, nil
+	default:
+		log.Fatalf("Unable to scan the rows. %v", err)
+	}
+
+	return book, err
 }
