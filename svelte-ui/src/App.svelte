@@ -1,45 +1,112 @@
 <script lang="ts">
-  import svelteLogo from './assets/svelte.svg'
-  import Counter from './lib/Counter.svelte'
+  import { onMount } from "svelte";
+  import Table from "./lib/Table.svelte";
+  import type { Book } from "./types/book";
+  let books:Book[] = [];
+  let bookid:number;
+
+  let name = "";
+  let price = 0;
+  let publisher = "";
+
+  onMount(async () => {
+  getBooks()
+  });
+
+  const getBooks=async()=>{
+    const res = await fetch(`http://localhost:8888/api/books`);
+    books = await res.json();
+  }
+  $: selectedBook = bookid ? books.find((s) => s.bookid === bookid) : null;
+  $: reset_stock_inputs(selectedBook);
+
+  async function updateBook() {
+    selectedBook.name = name;
+    selectedBook.price = price;
+    selectedBook.publisher = publisher;
+    const res = await fetch(
+      `http://localhost:8888/api/books/${selectedBook.bookid}`,
+      {
+        mode: "cors",
+        method: "PUT",
+        body: JSON.stringify(selectedBook),
+      }
+    );
+    if(res.ok) getBooks();
+  }
+
+  async function deleteBook(event) {
+    const res = await fetch(
+      `http://localhost:8888/api/books/${event.detail.id}`,
+      {
+        mode: "cors",
+        method: "DELETE",
+      }
+    );
+    if(res.ok) getBooks();
+   }
+
+  function reset_stock_inputs(book) {
+    name = book ? book.name : "";
+    price = book ? book.price : "";
+    publisher = book ? book.publisher : "";
+  }
+
+  async function createBook() {
+    const res = await fetch(`http://localhost:8888/api/books`, {
+      method: "POST",
+      body: JSON.stringify({ name: name, price: price, publisher: publisher }),
+    });
+    console.log(res);
+    if(res.ok) getBooks();
+    
+  }
 </script>
+<div class="book-form">
+<label><input bind:value={name} placeholder="name" /></label>
+<label><input type="number" bind:value={price} placeholder="price" /></label>
+<label><input bind:value={publisher} placeholder="publisher" /></label>
 
-<main>
-  <div>
-    <a href="https://vitejs.dev" target="_blank" rel="noreferrer"> 
-      <img src="/vite.svg" class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer"> 
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
-  </div>
-  <h1>Vite + Svelte</h1>
-
-  <div class="card">
-    <Counter />
-  </div>
-
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the official Svelte app framework powered by Vite!
-  </p>
-
-  <p class="read-the-docs">
-    Click on the Vite and Svelte logos to learn more
-  </p>
-</main>
+<div class="buttons">
+  <button on:click={createBook} disabled={!name || !price || !publisher}
+    >create</button
+  >
+  
+  <button on:click={updateBook} disabled={!name || !price || !selectedBook}
+    >update</button
+  >
+</div> 
+</div>
+<Table {books} bind:bookid on:delete={deleteBook} />
 
 <style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
+  * {
+    font-family: inherit;
+    font-size: inherit;
   }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
+
+  input {
+    display: block;
+    margin: 0 0 0.5em 0;
   }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
+
+  select {
+    float: left;
+    margin: 0 1em 1em 0;
+    width: 14em;
   }
-  .read-the-docs {
-    color: #888;
+
+  button{
+    width: 100px;
+    height: 40px;
+    text-align: center;
+  }
+  .buttons {
+    clear: both;
+  }
+  .book-form{
+    display: flex;
+    align-items: center;
+    flex-direction: column;
   }
 </style>
