@@ -18,7 +18,7 @@
     books = await res.json();
   }
   $: selectedBook = bookid ? books.find((s) => s.bookid === bookid) : null;
-  $: reset_stock_inputs(selectedBook);
+  $: reset_input(selectedBook);
 
   async function updateBook() {
     selectedBook.name = name;
@@ -46,7 +46,7 @@
     if(res.ok) getBooks();
    }
 
-  function reset_stock_inputs(book) {
+  function reset_input(book) {
     name = book ? book.name : "";
     price = book ? book.price : "";
     publisher = book ? book.publisher : "";
