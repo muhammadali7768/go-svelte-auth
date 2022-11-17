@@ -2,6 +2,8 @@
   import { onMount } from "svelte";
   import Table from "./lib/Table.svelte";
   import type { Book } from "./types/book";
+
+  const BASE_URL="http://localhost:8888/api";
   let books:Book[] = [];
   let bookid:number;
 
@@ -14,7 +16,7 @@
   });
 
   const getBooks=async()=>{
-    const res = await fetch(`http://localhost:8888/api/books`);
+    const res = await fetch(`${BASE_URL}/books`);
     books = await res.json();
   }
   $: selectedBook = bookid ? books.find((s) => s.bookid === bookid) : null;
@@ -25,7 +27,7 @@
     selectedBook.price = price;
     selectedBook.publisher = publisher;
     const res = await fetch(
-      `http://localhost:8888/api/books/${selectedBook.bookid}`,
+      `${BASE_URL}/books/${selectedBook.bookid}`,
       {
         mode: "cors",
         method: "PUT",
@@ -37,7 +39,7 @@
 
   async function deleteBook(event) {
     const res = await fetch(
-      `http://localhost:8888/api/books/${event.detail.id}`,
+      `${BASE_URL}/books/${event.detail.id}`,
       {
         mode: "cors",
         method: "DELETE",
@@ -53,7 +55,7 @@
   }
 
   async function createBook() {
-    const res = await fetch(`http://localhost:8888/api/books`, {
+    const res = await fetch(`${BASE_URL}/books`, {
       method: "POST",
       body: JSON.stringify({ name: name, price: price, publisher: publisher }),
     });
