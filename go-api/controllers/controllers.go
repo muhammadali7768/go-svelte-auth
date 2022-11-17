@@ -8,7 +8,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
+	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
@@ -68,8 +70,35 @@ func GetAllBooks(w http.ResponseWriter, r *http.Request) {
 
 }
 func GetBookById(w http.ResponseWriter, r *http.Request) {}
-func UpdateBook(w http.ResponseWriter, r *http.Request)  {}
-func DeleteBook(w http.ResponseWriter, r *http.Request)  {}
+
+func UpdateBook(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+
+	id, err := strconv.Atoi(params["id"])
+
+	if err != nil {
+		log.Fatalf("Unable to convert the string into int. %v", err)
+	}
+	var book models.Book
+
+	err = json.NewDecoder(r.Body).Decode(&book)
+
+	if err != nil {
+		log.Fatalf("Unable to decode the request body. %v", err)
+	}
+
+	updatedRows := updateBook(int64(id), book)
+
+	msg := fmt.Sprintf("Book updted successfully. Total rows affected %v", updatedRows)
+
+	res := response{
+		ID:      int64(id),
+		Message: msg,
+	}
+
+	json.NewEncoder(w).Encode(res)
+}
+func DeleteBook(w http.ResponseWriter, r *http.Request) {}
 
 func insertBook(book models.Book) int64 {
 	db := createConnection()
@@ -117,4 +146,27 @@ func getAllBooks() ([]models.Book, error) {
 	}
 	return books, err
 
+}
+
+func updateBook(id int64, book models.Book) int64 {
+	db := createConnection()
+	defer db.Close()
+
+	sqlStatement := "Update books set name=$2, price=$3,publisher=$4 where id=$1"
+
+	res, err := db.Exec(sqlStatement, id, book.Name, book.Price, book.Publisher)
+
+	if err != nil {
+		log.Fatalf("Unable to run the update query %v", err)
+	}
+
+	rowsAffected, err := res.RowsAffected()
+
+	if err != nil {
+		log.Fatalf("Unable to get the affected rows %v", err)
+	}
+
+	fmt.Printf(`Total Affected Rows are : %v`, rowsAffected)
+
+	return rowsAffected
 }
