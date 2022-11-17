@@ -56,7 +56,17 @@ func CreateBook(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(res)
 }
-func GetAllBooks(w http.ResponseWriter, r *http.Request) {}
+func GetAllBooks(w http.ResponseWriter, r *http.Request) {
+
+	books, err := getAllBooks()
+
+	if err != nil {
+		log.Fatalf("Unable to get all the books. %v", err)
+	}
+
+	json.NewEncoder(w).Encode(books)
+
+}
 func GetBookById(w http.ResponseWriter, r *http.Request) {}
 func UpdateBook(w http.ResponseWriter, r *http.Request)  {}
 func DeleteBook(w http.ResponseWriter, r *http.Request)  {}
@@ -77,5 +87,34 @@ func insertBook(book models.Book) int64 {
 	fmt.Printf("inserted a single record with id %v", id)
 
 	return id
+
+}
+
+func getAllBooks() ([]models.Book, error) {
+	db := createConnection()
+	defer db.Close()
+
+	var books []models.Book
+
+	sqlStatement := "SELECT * FROM books"
+
+	rows, err := db.Query(sqlStatement)
+
+	if err != nil {
+		log.Fatalf("Unable to execute the query. %v", err)
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var book models.Book
+
+		err = rows.Scan(&book.BookId, &book.Name, &book.Price, &book.Publisher)
+		if err != nil {
+			log.Fatalf("Unable to scan the rows. %v", err)
+		}
+		books = append(books, book)
+	}
+	return books, err
 
 }
