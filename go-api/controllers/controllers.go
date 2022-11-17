@@ -115,7 +115,24 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 func DeleteBook(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
 
+	id, err := strconv.Atoi(params["id"])
+
+	if err != nil {
+		log.Fatalf("Unable to convert the string into int. %v", err)
+	}
+
+	deletedRows := deleteBook(int64(id))
+
+	msg := fmt.Sprintf("Book Deleted successfully. Total rows affected %v", deletedRows)
+
+	res := response{
+		ID:      int64(id),
+		Message: msg,
+	}
+
+	json.NewEncoder(w).Encode(res)
 }
 
 func insertBook(book models.Book) int64 {
@@ -212,4 +229,28 @@ func getBookById(id int64) (models.Book, error) {
 	}
 
 	return book, err
+}
+
+func deleteBook(id int64) int64 {
+
+	db := createConnection()
+	defer db.Close()
+
+	sqlStatement := "DELETE FROM books  where id=$1"
+
+	res, err := db.Exec(sqlStatement, id)
+
+	if err != nil {
+		log.Fatalf("Unable to run the delete query %v", err)
+	}
+
+	rowsAffected, err := res.RowsAffected()
+
+	if err != nil {
+		log.Fatalf("Unable to get the affected rows %v", err)
+	}
+
+	fmt.Printf("Total Affected Rows are : %v", rowsAffected)
+
+	return rowsAffected
 }
