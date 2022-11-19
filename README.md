@@ -5,4 +5,6 @@ To create the database and the books table, navigate to go-api directory and run
 ```sh
 docker-compose up -d
 ```
+Navigate to go-api folder and copy .env.example file content to .env file and update the connection string according to your variables.
+
 
