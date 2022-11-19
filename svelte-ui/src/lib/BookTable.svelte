@@ -23,6 +23,8 @@
     <th>Publisher</th>
     <th>Action</th>
   </tr>
+  {#if !books} <tr><td colspan="4">No Books added yet</td></tr>
+  {:else}
   {#each books as book}
     <tr>
       <td>{book.name}</td>
@@ -38,6 +40,7 @@
       </td>
     </tr>
   {/each}
+  {/if}
 </table>
 
 <style>

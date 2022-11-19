@@ -57,10 +57,11 @@
 
   
 
-  async function createBook() {
+  async function createBook(event) {
+    console.log("create book",event.detail.book)
     const res = await fetch(`${BASE_URL}/books`, {
       method: "POST",
-      body: JSON.stringify(book),
+      body: JSON.stringify(event.detail.book),
     });
     console.log(res);
     if (res.ok) {

@@ -1,6 +1,6 @@
 CREATE TABLE books (
     id serial primary key,
     name text,
-    price int,
+    price decimal,
     publisher text
 );

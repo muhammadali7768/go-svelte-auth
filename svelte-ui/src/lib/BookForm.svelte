@@ -11,7 +11,7 @@
       : { name: "", price: null, publisher: "" };
 
   const createBook = () => {
-    dispatch("create");
+    dispatch("create",{book:book});
   };
 
   const updateBook = () => {
