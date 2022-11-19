@@ -1,8 +1,8 @@
 CREATE TABLE users (
     id serial primary key,
     name text,
-    price decimal,
-    publisher text
+    email varchar,
+    password varchar
 );
 
 CREATE TABLE books (

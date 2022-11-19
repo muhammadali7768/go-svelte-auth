@@ -3,43 +3,17 @@ package controllers
 import (
 	"database/sql"
 	"encoding/json"
+	"example/books-api/connection"
+	"example/books-api/dtos"
 	"example/books-api/models"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
-
-type response struct {
-	ID      int64  `json:"id,omitempty"`
-	Message string `json:"messge,omitempty"`
-}
-
-func createConnection() *sql.DB {
-	err := godotenv.Load(".env")
-
-	if err != nil {
-		log.Fatal("Error Loading .env file")
-	}
-
-	db, err := sql.Open("postgres", os.Getenv("POSTGRES_URL"))
-
-	if err != nil {
-		panic(err)
-	}
-	err = db.Ping()
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println("Connected successfully with pg")
-	return db
-}
 
 func CreateBook(w http.ResponseWriter, r *http.Request) {
 	var book models.Book
@@ -51,7 +25,7 @@ func CreateBook(w http.ResponseWriter, r *http.Request) {
 
 	insertID := insertBook(book)
 
-	res := response{
+	res := dtos.Response{
 		ID:      insertID,
 		Message: "Book created successfully",
 	}
@@ -107,7 +81,7 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 
 	msg := fmt.Sprintf("Book updted successfully. Total rows affected %v", updatedRows)
 
-	res := response{
+	res := dtos.Response{
 		ID:      int64(id),
 		Message: msg,
 	}
@@ -127,7 +101,7 @@ func DeleteBook(w http.ResponseWriter, r *http.Request) {
 
 	msg := fmt.Sprintf("Book Deleted successfully. Total rows affected %v", deletedRows)
 
-	res := response{
+	res := dtos.Response{
 		ID:      int64(id),
 		Message: msg,
 	}
@@ -136,7 +110,7 @@ func DeleteBook(w http.ResponseWriter, r *http.Request) {
 }
 
 func insertBook(book models.Book) int64 {
-	db := createConnection()
+	db := connection.CreateConnection()
 
 	defer db.Close()
 
@@ -155,7 +129,7 @@ func insertBook(book models.Book) int64 {
 }
 
 func getAllBooks() ([]models.Book, error) {
-	db := createConnection()
+	db := connection.CreateConnection()
 	defer db.Close()
 
 	var books []models.Book
@@ -184,7 +158,7 @@ func getAllBooks() ([]models.Book, error) {
 }
 
 func updateBook(id int64, book models.Book) int64 {
-	db := createConnection()
+	db := connection.CreateConnection()
 	defer db.Close()
 
 	sqlStatement := "Update books set name=$2, price=$3,publisher=$4 where id=$1"
@@ -207,7 +181,7 @@ func updateBook(id int64, book models.Book) int64 {
 }
 
 func getBookById(id int64) (models.Book, error) {
-	db := createConnection()
+	db := connection.CreateConnection()
 	defer db.Close()
 
 	var book models.Book
@@ -233,7 +207,7 @@ func getBookById(id int64) (models.Book, error) {
 
 func deleteBook(id int64) int64 {
 
-	db := createConnection()
+	db := connection.CreateConnection()
 	defer db.Close()
 
 	sqlStatement := "DELETE FROM books  where id=$1"
