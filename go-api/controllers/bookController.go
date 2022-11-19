@@ -43,7 +43,6 @@ func createConnection() *sql.DB {
 
 func CreateBook(w http.ResponseWriter, r *http.Request) {
 	var book models.Book
-	fmt.Printf("%+v\n", r.Body)
 	err := json.NewDecoder(r.Body).Decode(&book)
 
 	if err != nil {
