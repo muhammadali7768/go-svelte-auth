@@ -1,6 +1,6 @@
 package dtos
 
 type Response struct {
-	ID      int64  `json:"id,omitempty"`
+	Status  int64  `json:"status,omitempty"`
 	Message string `json:"messge,omitempty"`
 }

@@ -25,9 +25,10 @@ func CreateBook(w http.ResponseWriter, r *http.Request) {
 
 	insertID := insertBook(book)
 
+	msg := fmt.Sprintf("Book created successfully. Book id is %v", insertID)
 	res := dtos.Response{
-		ID:      insertID,
-		Message: "Book created successfully",
+		Status:  http.StatusOK,
+		Message: msg,
 	}
 
 	json.NewEncoder(w).Encode(res)
@@ -82,7 +83,7 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 	msg := fmt.Sprintf("Book updted successfully. Total rows affected %v", updatedRows)
 
 	res := dtos.Response{
-		ID:      int64(id),
+		Status:  http.StatusOK,
 		Message: msg,
 	}
 
@@ -102,7 +103,7 @@ func DeleteBook(w http.ResponseWriter, r *http.Request) {
 	msg := fmt.Sprintf("Book Deleted successfully. Total rows affected %v", deletedRows)
 
 	res := dtos.Response{
-		ID:      int64(id),
+		Status:  http.StatusOK,
 		Message: msg,
 	}
 
