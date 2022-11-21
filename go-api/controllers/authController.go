@@ -2,17 +2,19 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"example/books-api/connection"
 	"example/books-api/dtos"
 	"example/books-api/models"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/sessions"
 )
 
-var store = sessions.NewCookieStore([]byte("secret_key"))
+var store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_SECRET")))
 
 func Register(w http.ResponseWriter, r *http.Request) {
 	var user models.User
@@ -53,6 +55,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	session, _ := store.Get(r, "session-id")
 	session.Values["authenticated"] = true
+	session.Values["user_id"] = regUser.UserId
+	fmt.Println(session)
 	// Saves all sessions used during the current request
 	session.Save(r, w)
 
@@ -63,14 +67,27 @@ func IsAuthenticated(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "session-id")
 
 	authenticated := session.Values["authenticated"]
+
 	if authenticated != nil && authenticated != false {
-		w.Write([]byte("Welcome!"))
+		if userId, exist := session.Values["user_id"]; exist {
+			fmt.Printf("User ID %v", userId)
+			user, err := findUserById(userId.(int64))
+			if err != nil {
+				http.Error(w, "User Not Found", http.StatusNotFound)
+				return
+			}
+
+			json.NewEncoder(w).Encode(user)
+			return
+		}
+		http.Error(w, "User Not Found", http.StatusNotFound)
 		return
 	} else {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
 }
+
 func Logout(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "session-id")
 	// Set the authenticated value on the session to false
@@ -81,6 +98,26 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		Message: "Logout successfully",
 	}
 	json.NewEncoder(w).Encode(res)
+}
+
+func GetAuthenticatedUser(r *http.Request) (*models.User, error) {
+	//validate the session token in the request,
+	session, _ := store.Get(r, "session-id")
+
+	authenticated := session.Values["authenticated"]
+
+	if authenticated != nil && authenticated != false {
+		if userId, exist := session.Values["user_id"]; exist {
+			fmt.Printf("User ID %v", userId)
+			user, err := findUserById(userId.(int64))
+			return &user, err
+		}
+		return nil, errors.New("session not found for this user")
+	} else {
+
+		return nil, errors.New("forbidden resources")
+
+	}
 }
 
 func insertUser(user models.User) int64 {
@@ -109,6 +146,20 @@ func findUser(email string, password string) (models.User, error) {
 	sqlStatement := `SELECT id,name,email FROM users where email=$1 AND password=$2 LIMIT 1`
 
 	row := db.QueryRow(sqlStatement, email, password)
+	var user models.User
+	err := row.Scan(&user.UserId, &user.Name, &user.Email)
+
+	return user, err
+}
+
+func findUserById(id int64) (models.User, error) {
+	db := connection.CreateConnection()
+
+	defer db.Close()
+
+	sqlStatement := `SELECT id,name,email FROM users where id=$1  LIMIT 1`
+
+	row := db.QueryRow(sqlStatement, id)
 	var user models.User
 	err := row.Scan(&user.UserId, &user.Name, &user.Email)
 
