@@ -1,8 +1,14 @@
 <script lang="ts">
+  import api from '../../../http';
 import {auth} from '../../../store/auth'
-
-const logout=()=>{
+import {navigateTo} from 'svelte-router-spa'
+const logout=async()=>{
+  const res = await api.get(`/logout`);
+  console.log(res)
+  if(res.data?.status===200) {
     $auth={auth: false, user: {}}
+    navigateTo("/login")
+  };
 }
 
 </script>
@@ -15,8 +21,9 @@ const logout=()=>{
     <a  href="/login">Login</a>
     <a  href="/login">Register</a>
     {:else} 
-    <button type="button" href="#" on:click={logout}>Logout</button>
+   
     <div class="user-info">{$auth.user.name}</div>
+    <button type="button" href="#" on:click={logout}>Logout</button>
     {/if}
   </div>
 </header>
@@ -26,6 +33,7 @@ const logout=()=>{
     overflow: hidden;
     background-color: #f1f1f1;
     padding: 20px 10px;
+    height: 50px;
   }
 
   .header-right a {
@@ -44,6 +52,12 @@ const logout=()=>{
     text-align: center;
     line-height: 25px;
   }
+  button{
+    float: left;
+    padding: 12px;
+    text-align: center;
+    line-height: 25px;
+  }
 
   a.logo {
     font-size: 25px;
@@ -54,11 +68,7 @@ const logout=()=>{
     background-color: #ddd;
     color: black;
   }
-
-  .header a.active {
-    background-color: dodgerblue;
-    color: white;
-  }
+  
 
   .header-right {
     float: right;

@@ -66,8 +66,17 @@
     }
   </script>
   
-  <h1>Book Management App {currentRoute}</h1>
+  <h1 class="title">Book Management App</h1>
   
   <BookForm bind:selectedBook on:create={createBook} on:update={updateBook} />
   <BookTable {books} bind:bookid on:delete={deleteBook} />
+
+
+  <style>
+    .title{
+      text-align: center;
+      margin-top: 20px;
+      margin-bottom: 30px;
+    }
+  </style>
   

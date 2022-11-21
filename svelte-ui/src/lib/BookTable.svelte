@@ -46,7 +46,10 @@
 <style>
   table {
     border-collapse: collapse;
-    width: 100%;
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 20px;
   }
 
   th,
