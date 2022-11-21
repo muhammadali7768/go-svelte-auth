@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
-  import type { Book } from "../types/book";
+  import type { Book } from "../../types/book";
 
   export let selectedBook;
   let book: Book;

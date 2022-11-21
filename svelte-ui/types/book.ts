@@ -3,5 +3,6 @@ export type Book = {
   name?: string;
   price?: number;
   publisher?: string;
+  userId?:number;
 };
 

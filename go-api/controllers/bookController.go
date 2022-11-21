@@ -115,9 +115,11 @@ func insertBook(book models.Book) int64 {
 
 	defer db.Close()
 
-	sqlStatement := "INSERT INTO books(name,price,publisher) VALUES($1,$2,$3) RETURNING id"
+	sqlStatement := "INSERT INTO books(name,price,publisher,user_id) VALUES($1,$2,$3,$4) RETURNING id"
 	var id int64
-	err := db.QueryRow(sqlStatement, book.Name, book.Price, book.Publisher).Scan(&id)
+	println("User ID: %v", book.UserId)
+	println("User ID: %v", book.Name)
+	err := db.QueryRow(sqlStatement, book.Name, book.Price, book.Publisher, book.UserId).Scan(&id)
 
 	if err != nil {
 		log.Fatalf("Unable to execute the query %v", err)
@@ -148,7 +150,7 @@ func getAllBooks() ([]models.Book, error) {
 	for rows.Next() {
 		var book models.Book
 
-		err = rows.Scan(&book.BookId, &book.Name, &book.Price, &book.Publisher)
+		err = rows.Scan(&book.BookId, &book.Name, &book.Price, &book.Publisher, &book.UserId)
 		if err != nil {
 			log.Fatalf("Unable to scan the rows. %v", err)
 		}
