@@ -15,14 +15,14 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func CreateBook(w http.ResponseWriter, r *http.Request) {
+func CreateBook(w http.ResponseWriter, r *http.Request, user *models.User) {
 	var book models.Book
 	err := json.NewDecoder(r.Body).Decode(&book)
 
 	if err != nil {
 		log.Fatalf("Unable to decode the request body. %v", err)
 	}
-
+	book.UserId = user.UserId
 	insertID := insertBook(book)
 
 	msg := fmt.Sprintf("Book created successfully. Book id is %v", insertID)
@@ -33,7 +33,7 @@ func CreateBook(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(res)
 }
-func GetAllBooks(w http.ResponseWriter, r *http.Request) {
+func GetAllBooks(w http.ResponseWriter, r *http.Request, user *models.User) {
 
 	books, err := getAllBooks()
 
@@ -44,7 +44,7 @@ func GetAllBooks(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(books)
 
 }
-func GetBookById(w http.ResponseWriter, r *http.Request) {
+func GetBookById(w http.ResponseWriter, r *http.Request, user *models.User) {
 	params := mux.Vars(r)
 
 	id, err := strconv.Atoi(params["id"])
@@ -62,7 +62,7 @@ func GetBookById(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(book)
 }
 
-func UpdateBook(w http.ResponseWriter, r *http.Request) {
+func UpdateBook(w http.ResponseWriter, r *http.Request, user *models.User) {
 	params := mux.Vars(r)
 
 	id, err := strconv.Atoi(params["id"])
@@ -78,6 +78,11 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("Unable to decode the request body. %v", err)
 	}
 
+	//check if the user is not updating his/her books
+	if book.UserId != user.UserId {
+		http.Error(w, "you are not authorize for this action", http.StatusForbidden)
+		return
+	}
 	updatedRows := updateBook(int64(id), book)
 
 	msg := fmt.Sprintf("Book updted successfully. Total rows affected %v", updatedRows)
@@ -89,7 +94,7 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(res)
 }
-func DeleteBook(w http.ResponseWriter, r *http.Request) {
+func DeleteBook(w http.ResponseWriter, r *http.Request, user *models.User) {
 	params := mux.Vars(r)
 
 	id, err := strconv.Atoi(params["id"])
@@ -98,7 +103,7 @@ func DeleteBook(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("Unable to convert the string into int. %v", err)
 	}
 
-	deletedRows := deleteBook(int64(id))
+	deletedRows := deleteBook(int64(id), user.UserId)
 
 	msg := fmt.Sprintf("Book Deleted successfully. Total rows affected %v", deletedRows)
 
@@ -208,14 +213,14 @@ func getBookById(id int64) (models.Book, error) {
 	return book, err
 }
 
-func deleteBook(id int64) int64 {
+func deleteBook(id int64, userId int64) int64 {
 
 	db := connection.CreateConnection()
 	defer db.Close()
 
-	sqlStatement := "DELETE FROM books  where id=$1"
+	sqlStatement := "DELETE FROM books  where id=$1 AND user_id=$2"
 
-	res, err := db.Exec(sqlStatement, id)
+	res, err := db.Exec(sqlStatement, id, userId)
 
 	if err != nil {
 		log.Fatalf("Unable to run the delete query %v", err)

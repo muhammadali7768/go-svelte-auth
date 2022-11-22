@@ -88,7 +88,7 @@ func IsAuthenticated(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Logout(w http.ResponseWriter, r *http.Request) {
+func Logout(w http.ResponseWriter, r *http.Request, user *models.User) {
 	session, _ := store.Get(r, "session-id")
 	// Set the authenticated value on the session to false
 	session.Values["authenticated"] = false
