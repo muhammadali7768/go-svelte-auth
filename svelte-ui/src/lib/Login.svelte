@@ -18,8 +18,8 @@ const login=async()=>{
 
 </script>
 
-<div class="book-form">
-    <h1>You are loggedin as {$auth.user.email}</h1>
+<div class="login-form">
+    <h1>Please Login</h1>
       <label><input type="text" bind:value={user.email} placeholder="email" /></label>
     <label><input type="password" bind:value={user.password} placeholder="password" /></label>
   
@@ -46,7 +46,7 @@ const login=async()=>{
   .buttons {
     clear: both;
   }
-  .book-form {
+  .login-form {
     display: flex;
     align-items: center;
     flex-direction: column;

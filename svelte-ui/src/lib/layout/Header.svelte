@@ -19,7 +19,7 @@ const logout=async()=>{
     <a  href="/">Home</a>
     {#if (!$auth.auth)}
     <a  href="/login">Login</a>
-    <a  href="/login">Register</a>
+    <a  href="/register">Register</a>
     {:else} 
    
     <div class="user-info">{$auth.user.name}</div>
