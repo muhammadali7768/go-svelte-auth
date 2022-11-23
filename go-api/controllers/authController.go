@@ -12,6 +12,7 @@ import (
 	"os"
 
 	"github.com/gorilla/sessions"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_SECRET")))
@@ -121,13 +122,19 @@ func GetAuthenticatedUser(r *http.Request) (*models.User, error) {
 }
 
 func insertUser(user models.User) int64 {
+	hash, errr := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if errr != nil {
+		log.Fatalf("Unable to hash the password")
+	}
+
 	db := connection.CreateConnection()
 
 	defer db.Close()
 
 	sqlStatement := "INSERT INTO users(name,email,password) VALUES($1,$2,$3) RETURNING id"
 	var id int64
-	err := db.QueryRow(sqlStatement, user.Name, user.Email, user.Password).Scan(&id)
+
+	err := db.QueryRow(sqlStatement, user.Name, user.Email, hash).Scan(&id)
 
 	if err != nil {
 		log.Fatalf("Unable to execute the query %v", err)
@@ -138,18 +145,22 @@ func insertUser(user models.User) int64 {
 	return id
 }
 
-func findUser(email string, password string) (models.User, error) {
+func findUser(email string, password string) (*models.User, error) {
 	db := connection.CreateConnection()
 
 	defer db.Close()
 
-	sqlStatement := `SELECT id,name,email FROM users where email=$1 AND password=$2 LIMIT 1`
+	sqlStatement := `SELECT id,name,email, password FROM users where email=$1 LIMIT 1`
 
-	row := db.QueryRow(sqlStatement, email, password)
+	row := db.QueryRow(sqlStatement, email)
 	var user models.User
-	err := row.Scan(&user.UserId, &user.Name, &user.Email)
+	err := row.Scan(&user.UserId, &user.Name, &user.Email, &user.Password)
 
-	return user, err
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return nil, err
+	}
+	user.Password = ""
+	return &user, err
 }
 
 func findUserById(id int64) (models.User, error) {
